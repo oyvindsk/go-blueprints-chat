@@ -6,11 +6,12 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/oyvindsk/go-blueprints-chat/trace"
+	"github.com/stretchr/objx"
 )
 
 type room struct {
 	// forward is the channel that holds messages that should be forwared to the other clients
-	forward chan []byte
+	forward chan *message
 
 	// a channel for ppl whishing to join the room
 	join chan *client
@@ -67,11 +68,19 @@ func (r *room) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	client := &client{
-		socket: socket,
-		send:   make(chan []byte, messageBufferSize),
-		room:   r,
+	authCoookie, err := req.Cookie("auth")
+	if err != nil {
+		log.Fatal("Failed to get auth cookie:", err)
+		return
 	}
+
+	client := &client{
+		socket:   socket,
+		send:     make(chan *message, messageBufferSize),
+		room:     r,
+		userData: objx.MustFromBase64(authCoookie.Value),
+	}
+
 	r.join <- client
 	defer func() { r.leave <- client }()
 	go client.write()
@@ -80,7 +89,7 @@ func (r *room) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func newRoom() *room {
 	return &room{
-		forward: make(chan []byte),
+		forward: make(chan *message),
 		join:    make(chan *client),
 		leave:   make(chan *client),
 		clients: make(map[*client]bool),
