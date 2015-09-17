@@ -46,7 +46,7 @@ func main() {
 		google.New("226948480527-gh1pbqddkvmo2cvj67fqc8aqko5l49n7.apps.googleusercontent.com", "8iTvWoiH999qNybl4kvd-vHr", "http://localhost:8080/auth/callback/google"),
 	)
 
-	r := newRoom()
+	r := newRoom(UseAuthAvatar)
 	r.tracer = trace.New(os.Stdout)
 	http.Handle("/login/", &templateHandler{filename: "login.html"})
 	http.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
