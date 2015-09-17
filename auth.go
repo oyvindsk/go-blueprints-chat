@@ -17,7 +17,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	segs := strings.Split(r.URL.Path, "/")
 	action := segs[2]
 	provider := segs[3]
+
 	switch action {
+
 	case "login":
 		provider, err := gomniauth.Provider(provider)
 		if err != nil {
@@ -29,6 +31,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Location", loginUrl)
 		w.WriteHeader(http.StatusTemporaryRedirect)
+
 	case "callback":
 		provider, err := gomniauth.Provider(provider)
 		if err != nil {
@@ -47,6 +50,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		authCookieValue := objx.New(map[string]interface{}{
 			"name":       user.Name(),
 			"avatar_url": user.AvatarURL(),
+			"email":      user.Email(),
 		}).MustBase64()
 		http.SetCookie(w, &http.Cookie{
 			Name:  "auth",
