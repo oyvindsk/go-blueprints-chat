@@ -46,7 +46,7 @@ func main() {
 		google.New("226948480527-gh1pbqddkvmo2cvj67fqc8aqko5l49n7.apps.googleusercontent.com", "FIXME", "http://localhost:8080/auth/callback/google"),
 	)
 
-	r := newRoom(UseGravatarAvatar)
+	r := newRoom(UseFileSystemAvatar)
 	r.tracer = trace.New(os.Stdout)
 	http.Handle("/login/", &templateHandler{filename: "login.html"})
 	http.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
@@ -62,8 +62,13 @@ func main() {
 	http.HandleFunc("/auth/", loginHandler)
 	http.Handle("/chat", MustAuth(&templateHandler{filename: "chat.html"}))
 	http.Handle("/room", r)
+	http.Handle("/upload", &templateHandler{filename: "upload.html"})
+	http.HandleFunc("/uploader", uploaderHandler)
+	http.Handle("/avatars/", http.StripPrefix("/avatars/", http.FileServer(http.Dir("./avatars"))))
+
 	// get the room going
 	go r.run()
+
 	// Start the webserver
 	log.Println("Serving on: ", *addr)
 	if err := http.ListenAndServe(*addr, nil); err != nil {
